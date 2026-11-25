@@ -36,7 +36,18 @@ PanelWindow {
             searchInput.text = "";
             query = "";
             updateResults();
+            Qt.callLater(updateResults);
             searchInput.forceActiveFocus();
+        }
+    }
+
+    Component.onCompleted: updateResults()
+
+    Connections {
+        target: DesktopEntries.applications ?? null
+        ignoreUnknownSignals: true
+        function onValuesChanged() {
+            if (launchWin.isOpen) launchWin.updateResults();
         }
     }
 

@@ -87,20 +87,23 @@ PanelWindow {
                             radius: 8
                             visible: toast.image !== "" || toast.appIcon !== ""
 
-                            Image {
+                            Item {
                                 anchors.fill: parent
-                                visible: toast.image !== ""
-                                source: toast.image
-                                fillMode: Image.PreserveAspectCrop
-                                asynchronous: true
-                                sourceSize.width: 64
-                                sourceSize.height: 64
-                            }
+                                Image {
+                                    anchors.fill: parent
+                                    visible: toast.image !== ""
+                                    source: toast.image
+                                    fillMode: Image.PreserveAspectCrop
+                                    asynchronous: true
+                                    sourceSize.width: 64
+                                    sourceSize.height: 64
+                                }
 
-                            IconImage {
-                                anchors.fill: parent
-                                visible: toast.image === "" && toast.appIcon !== ""
-                                source: toast.appIcon
+                                IconImage {
+                                    anchors.fill: parent
+                                    visible: toast.image === "" && toast.appIcon !== ""
+                                    source: toast.appIcon
+                                }
                             }
                         }
 
