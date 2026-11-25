@@ -141,15 +141,13 @@ PanelWindow {
             Niri.focusWindow(item.windowId);
             closeRequested();
         } else if (item.kind === "calc") {
-            runnerProc.exec(["wl-copy", item.value]);
+            Quickshell.execDetached(["wl-copy", item.value]);
             closeRequested();
         } else if (item.kind === "cmd") {
-            runnerProc.exec(["sh", "-c", item.cmd]);
+            Quickshell.execDetached(["sh", "-c", item.cmd]);
             closeRequested();
         }
     }
-
-    Process { id: runnerProc }
 
     MouseArea {
         anchors.fill: parent

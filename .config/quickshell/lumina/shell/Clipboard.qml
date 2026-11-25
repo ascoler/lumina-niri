@@ -51,7 +51,7 @@ PanelWindow {
 
     function copyItem(it) {
         if (!it) return;
-        actionProc.exec(["sh", "-c", "printf '%s' " + JSON.stringify(it.raw) + " | cliphist decode | wl-copy"]);
+        Quickshell.execDetached(["sh", "-c", "printf '%s' " + JSON.stringify(it.raw) + " | cliphist decode | wl-copy"]);
         closeRequested();
     }
 

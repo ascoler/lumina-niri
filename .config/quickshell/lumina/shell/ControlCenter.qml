@@ -63,8 +63,6 @@ PanelWindow {
         }
     }
 
-    Process { id: cmdProc }
-
     FileView {
         id: notesFile
         path: Quickshell.env("HOME") + "/.local/share/lumina/notes.md"
@@ -223,7 +221,7 @@ PanelWindow {
                     Text { anchors.centerIn: parent; text: "󰌾"; font.family: Theme.fontMono; font.pixelSize: 13; color: Theme.fg }
                     MouseArea {
                         id: lockM; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-                        onClicked: { ccWin.closeRequested(); cmdProc.exec(["hyprlock"]); }
+                        onClicked: { ccWin.closeRequested(); Quickshell.execDetached(["hyprlock"]); }
                     }
                 }
 
@@ -777,10 +775,10 @@ PanelWindow {
                                         else if (k === "mic") Audio.toggleMicMute();
                                         else if (k === "shot") {
                                             ccWin.closeRequested();
-                                            cmdProc.exec([Quickshell.env("HOME") + "/.local/bin/rice-screenshot", "region"]);
+                                            Quickshell.execDetached([Quickshell.env("HOME") + "/.local/bin/rice-screenshot", "region"]);
                                         } else if (k === "pick") {
                                             ccWin.closeRequested();
-                                            cmdProc.exec([Quickshell.env("HOME") + "/.local/bin/rice-colorpicker"]);
+                                            Quickshell.execDetached([Quickshell.env("HOME") + "/.local/bin/rice-colorpicker"]);
                                         }
                                     }
                                 }
@@ -842,7 +840,7 @@ PanelWindow {
                                         anchors.fill: parent; cursorShape: Qt.PointingHandCursor
                                         onClicked: {
                                             ccWin.closeRequested();
-                                            cmdProc.exec([Quickshell.env("HOME") + "/.local/bin/rice-wifi-menu"]);
+                                            Quickshell.execDetached([Quickshell.env("HOME") + "/.local/bin/rice-wifi-menu"]);
                                         }
                                     }
                                 }

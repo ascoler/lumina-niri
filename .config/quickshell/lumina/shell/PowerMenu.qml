@@ -40,7 +40,7 @@ PanelWindow {
         if (idx < 0 || idx >= actions.length) return;
         const a = actions[idx];
         closeRequested();
-        pwrProc.exec(a.cmd);
+        Quickshell.execDetached(a.cmd);
     }
 
     onIsOpenChanged: {
@@ -49,8 +49,6 @@ PanelWindow {
             rootFocus.forceActiveFocus();
         }
     }
-
-    Process { id: pwrProc }
 
     MouseArea {
         anchors.fill: parent

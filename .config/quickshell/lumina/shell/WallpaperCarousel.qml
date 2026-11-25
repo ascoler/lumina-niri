@@ -82,7 +82,7 @@ PanelWindow {
 
     function applyWallpaper(item) {
         if (!item) return;
-        applyProc.exec([Quickshell.env("HOME") + "/.local/bin/rice-wallpaper", item.path]);
+        Quickshell.execDetached([Quickshell.env("HOME") + "/.local/bin/rice-wallpaper", item.path]);
     }
 
     function pickRandom() {
@@ -107,7 +107,6 @@ PanelWindow {
         onFileChanged: reload()
     }
 
-    Process { id: applyProc }
     Process {
         id: reindexProc
         command: [Quickshell.env("HOME") + "/.local/bin/rice-wallpaper-index"]

@@ -55,7 +55,7 @@ PanelWindow {
     function applyPalette(idx, closeAfter) {
         if (idx < 0 || idx >= presets.length) return;
         const p = presets[idx];
-        themeProc.exec([Quickshell.env("HOME") + "/.local/bin/rice-theme", p.name]);
+        Quickshell.execDetached([Quickshell.env("HOME") + "/.local/bin/rice-theme", p.name]);
         if (closeAfter) closeRequested();
     }
 
@@ -75,8 +75,6 @@ PanelWindow {
     }
 
     onActiveTabChanged: syncSelectedIndex()
-
-    Process { id: themeProc }
 
     MouseArea {
         anchors.fill: parent
