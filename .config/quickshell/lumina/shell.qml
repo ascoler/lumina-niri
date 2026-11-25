@@ -10,6 +10,7 @@ ShellRoot {
 
     property string activeOverlay: "" // "" | "control" | "wallpaper" | "launcher" | "clipboard" | "power" | "theme"
     property int controlTab: 0
+    property int themeTab: 0
 
     function openOverlay(name) {
         activeOverlay = (activeOverlay === name) ? "" : name;
@@ -31,7 +32,24 @@ ShellRoot {
         function toggleControlCenter(): void { root.controlTab = 0; root.openOverlay("control"); }
         function toggleClipboard(): void { root.openOverlay("clipboard"); }
         function togglePower(): void { root.openOverlay("power"); }
-        function toggleTheme(): void { root.openOverlay("theme"); }
+        function toggleTheme(): void {
+            if (root.activeOverlay === "theme" && root.themeTab !== 0) {
+                root.themeTab = 0;
+            } else {
+                root.themeTab = 0;
+                root.openOverlay("theme");
+            }
+        }
+        function toggleBarStyle(): void {
+            if (root.activeOverlay === "theme" && root.themeTab !== 1) {
+                root.themeTab = 1;
+            } else {
+                root.themeTab = 1;
+                root.openOverlay("theme");
+            }
+        }
+        function setBarStyle(style: string): void { Theme.setBarStyle(style, true); }
+        function cycleBarStyle(): void { Theme.cycleBarStyle(1); }
         function closeAll(): void { root.closeOverlays(); }
         function brightnessUp(): void { SystemInfo.adjustBrightness(0.05); }
         function brightnessDown(): void { SystemInfo.adjustBrightness(-0.05); }
@@ -51,7 +69,8 @@ ShellRoot {
             screen: modelData
             onToggleLauncher: root.openOverlay("launcher")
             onToggleWallpaper: root.openOverlay("wallpaper")
-            onToggleTheme: root.openOverlay("theme")
+            onToggleTheme: { root.themeTab = 0; root.openOverlay("theme"); }
+            onToggleBarStyle: { root.themeTab = 1; root.openOverlay("theme"); }
             onTogglePower: root.openOverlay("power")
             onToggleControlCenter: (tab) => {
                 root.controlTab = tab;
@@ -87,7 +106,8 @@ ShellRoot {
             isOpen: root.activeOverlay === "control"
             activeTab: root.controlTab
             onCloseRequested: root.closeOverlays()
-            onOpenThemeSwitcher: root.activeOverlay = "theme"
+            onOpenThemeSwitcher: { root.themeTab = 0; root.activeOverlay = "theme"; }
+            onOpenBarStyleSwitcher: { root.themeTab = 1; root.activeOverlay = "theme"; }
             onOpenPowerMenu: root.activeOverlay = "power"
         }
     }
@@ -128,6 +148,7 @@ ShellRoot {
         active: root.activeOverlay === "theme"
         ThemeSwitcher {
             isOpen: root.activeOverlay === "theme"
+            initialTab: root.themeTab
             onCloseRequested: root.closeOverlays()
         }
     }

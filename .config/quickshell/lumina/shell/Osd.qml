@@ -13,7 +13,7 @@ PanelWindow {
     }
     margins.bottom: 36
 
-    implicitWidth: 270
+    implicitWidth: 288
     implicitHeight: 56
     color: "transparent"
     visible: shown
@@ -22,7 +22,7 @@ PanelWindow {
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
     property bool shown: false
-    property string mode: "volume" // "volume" | "mic" | "brightness" | "layout"
+    property string mode: "volume" // "volume" | "mic" | "brightness" | "layout" | "barstyle"
     property real value: 0.5
     property bool muted: false
     property string labelText: ""
@@ -33,12 +33,13 @@ PanelWindow {
         muted = isMuted;
         labelText = text || "";
         shown = true;
+        osdPopAnim.restart();
         hideTimer.restart();
     }
 
     Timer {
         id: hideTimer
-        interval: 1550
+        interval: 1600
         onTriggered: osdWin.shown = false
     }
 
@@ -63,11 +64,26 @@ PanelWindow {
         }
     }
 
+    Connections {
+        target: Theme
+        function onBarStyleChangedOsd(label) {
+            osdWin.trigger("barstyle", 1.0, false, label);
+        }
+    }
+
     GlassCard {
+        id: osdCard
         anchors.fill: parent
         radiusValue: 26
         strong: true
         highlighted: true
+
+        transformOrigin: Item.Bottom
+        ParallelAnimation {
+            id: osdPopAnim
+            NumberAnimation { target: osdCard; property: "scale"; from: 0.90; to: 1.0; duration: 210; easing.type: Easing.OutBack; easing.overshoot: 1.3 }
+            NumberAnimation { target: osdCard; property: "opacity"; from: 0.0; to: 1.0; duration: 140; easing.type: Easing.OutCubic }
+        }
 
         RowLayout {
             anchors.fill: parent
@@ -83,13 +99,14 @@ PanelWindow {
                     if (osdWin.mode === "brightness") return "󰃠";
                     if (osdWin.mode === "mic") return osdWin.muted ? "󰍭" : "󰍬";
                     if (osdWin.mode === "layout") return "󰌌";
+                    if (osdWin.mode === "barstyle") return "󰕮";
                     return osdWin.muted ? "󰝟" : (osdWin.value > 0.5 ? "󰕾" : "󰖀");
                 }
             }
 
             // Progress bar for volume/brightness
             Rectangle {
-                visible: osdWin.mode !== "layout"
+                visible: osdWin.mode !== "layout" && osdWin.mode !== "barstyle"
                 Layout.fillWidth: true
                 height: 7
                 radius: 4
@@ -105,11 +122,14 @@ PanelWindow {
                 }
             }
 
-            // Keyboard layout text
+            // Text mode for layout / bar style
             Text {
-                visible: osdWin.mode === "layout"
+                visible: osdWin.mode === "layout" || osdWin.mode === "barstyle"
                 Layout.fillWidth: true
-                text: "Keyboard Layout: " + osdWin.labelText
+                elide: Text.ElideRight
+                text: osdWin.mode === "barstyle"
+                    ? ("Bar Style: " + osdWin.labelText)
+                    : ("Keyboard Layout: " + osdWin.labelText)
                 font.family: Theme.fontSans
                 font.pixelSize: 13
                 font.bold: true
@@ -117,7 +137,7 @@ PanelWindow {
             }
 
             Text {
-                visible: osdWin.mode !== "layout"
+                visible: osdWin.mode !== "layout" && osdWin.mode !== "barstyle"
                 Layout.preferredWidth: 38
                 horizontalAlignment: Text.AlignRight
                 text: osdWin.muted ? "Mute" : Math.round(osdWin.value * 100) + "%"

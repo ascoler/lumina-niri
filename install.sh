@@ -52,6 +52,7 @@ systemctl --user daemon-reload
 systemctl --user enable --now lumina-shell.service
 
 echo "==> Indexing wallpapers & generating initial palette..."
+[ -f "$HOME/.cache/theme/bar_style" ] || printf "aurora\n" > "$HOME/.cache/theme/bar_style"
 [ -x "$HOME/.local/bin/rice-wallpaper-index" ] && "$HOME/.local/bin/rice-wallpaper-index" || true
 [ -x "$HOME/.local/bin/rice-theme-generator" ] && "$HOME/.local/bin/rice-theme-generator" || true
 

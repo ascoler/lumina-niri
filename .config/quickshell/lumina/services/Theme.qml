@@ -20,6 +20,18 @@ Singleton {
     property color border: "#30323c"
     property string wallpaper: ""
 
+    property string barStyle: "aurora"
+
+    readonly property var barStyles: [
+        { id: "aurora",  name: "Aurora Glass",   desc: "Floating liquid-glass islands & glowing pills" },
+        { id: "notch",   name: "Dynamic Notch",  desc: "Unified top-center Dynamic Island & side wings" },
+        { id: "cyber",   name: "Neon Prism",     desc: "Sharp tech badges with dual-tone neon borders" },
+        { id: "eclipse", name: "Eclipse Pills",  desc: "Full-pill obsidian capsules with luminous rim" },
+        { id: "minimal", name: "Zen Minimal",    desc: "Airy floating chips & morphing workspace dots" }
+    ]
+
+    signal barStyleChangedOsd(string label)
+
     readonly property color glassBg: Qt.rgba(bg.r, bg.g, bg.b, 0.80)
     readonly property color glassStrong: Qt.rgba(bg.r, bg.g, bg.b, 0.90)
     readonly property color glassSurface: Qt.rgba(surface.r, surface.g, surface.b, 0.72)
@@ -34,6 +46,45 @@ Singleton {
     readonly property int animFast: 140
     readonly property int animNormal: 220
     readonly property int animSmooth: 320
+
+    function isValidBarStyle(id) {
+        for (let i = 0; i < barStyles.length; i++) {
+            if (barStyles[i].id === id) return true;
+        }
+        return false;
+    }
+
+    function barStyleInfo(id) {
+        for (let i = 0; i < barStyles.length; i++) {
+            if (barStyles[i].id === id) return barStyles[i];
+        }
+        return barStyles[0];
+    }
+
+    function setBarStyle(id, showOsd) {
+        const clean = (id || "").trim();
+        if (!isValidBarStyle(clean)) return;
+        if (barStyle !== clean) {
+            barStyle = clean;
+        }
+        barStyleFile.setText(clean + "\n");
+        if (showOsd) {
+            barStyleChangedOsd(barStyleInfo(clean).name);
+        }
+    }
+
+    function cycleBarStyle(step) {
+        const delta = step === undefined ? 1 : step;
+        let idx = 0;
+        for (let i = 0; i < barStyles.length; i++) {
+            if (barStyles[i].id === barStyle) {
+                idx = i;
+                break;
+            }
+        }
+        const nextIdx = (idx + delta + barStyles.length) % barStyles.length;
+        setBarStyle(barStyles[nextIdx].id, true);
+    }
 
     function applyJson(raw) {
         if (!raw || raw.trim() === "") return;
@@ -62,6 +113,19 @@ Singleton {
         path: Quickshell.env("HOME") + "/.cache/theme/palette.json"
         watchChanges: true
         onLoaded: root.applyJson(text())
+        onFileChanged: reload()
+    }
+
+    FileView {
+        id: barStyleFile
+        path: Quickshell.env("HOME") + "/.cache/theme/bar_style"
+        watchChanges: true
+        onLoaded: {
+            const val = (text() || "").trim();
+            if (root.isValidBarStyle(val) && val !== root.barStyle) {
+                root.barStyle = val;
+            }
+        }
         onFileChanged: reload()
     }
 }

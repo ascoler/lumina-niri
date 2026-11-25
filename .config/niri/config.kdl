@@ -167,7 +167,7 @@ layout {
         // - CSS-like notation: "rgb(255, 127, 0)", rgba(), hsl() and a few others.
 
         // Color of the ring on the active monitor.
-        active-color "#c3c0ff"
+        active-color "#abc7ff"
 
         // Color of the ring on inactive monitors.
         //
@@ -194,8 +194,8 @@ layout {
     // You can also add a border. It's similar to the focus ring, but always visible.
     border {
         width 2
-        active-color "#c3c0ff"
-        inactive-color "#201f25"
+        active-color "#abc7ff"
+        inactive-color "#1e2025"
         urgent-color "#ffb4ab"
     }
 
@@ -376,6 +376,7 @@ binds {
     Super+V hotkey-overlay-title="Clipboard History" { spawn "qs" "ipc" "-c" "lumina" "call" "shell" "toggleClipboard"; }
     Super+Escape hotkey-overlay-title="Power Menu" { spawn "qs" "ipc" "-c" "lumina" "call" "shell" "togglePower"; }
     Super+Alt+T hotkey-overlay-title="Theme Switcher" { spawn "qs" "ipc" "-c" "lumina" "call" "shell" "toggleTheme"; }
+    Super+Alt+B hotkey-overlay-title="Bar Style Switcher" { spawn "qs" "ipc" "-c" "lumina" "call" "shell" "toggleBarStyle"; }
     Super+N hotkey-overlay-title="Control Center & Notifications" { spawn "qs" "ipc" "-c" "lumina" "call" "shell" "toggleControlCenter"; }
     Super+L hotkey-overlay-title="Lock Screen" { spawn "hyprlock"; }
     Super+Alt+L hotkey-overlay-title="Lock Screen" { spawn "hyprlock"; }

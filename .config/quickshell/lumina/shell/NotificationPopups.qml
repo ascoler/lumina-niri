@@ -13,11 +13,11 @@ PanelWindow {
         top: true
         right: true
     }
-    margins.top: 52
-    margins.right: 12
+    margins.top: 58
+    margins.right: 20
 
-    implicitWidth: 368
-    implicitHeight: Math.max(10, popupCol.implicitHeight + 8)
+    implicitWidth: 378
+    implicitHeight: Math.max(10, popupCol.implicitHeight + 10)
     color: "transparent"
     visible: Notifications.popupModel.count > 0
     WlrLayershell.layer: WlrLayer.Overlay
@@ -27,7 +27,7 @@ PanelWindow {
     Column {
         id: popupCol
         width: parent.width
-        spacing: 8
+        spacing: 10
 
         Repeater {
             model: Notifications.popupModel
@@ -46,18 +46,28 @@ PanelWindow {
                 required property int timeoutMs
 
                 width: popupCol.width
-                implicitHeight: contentCol.implicitHeight + 22
-                radiusValue: 14
+                implicitHeight: contentCol.implicitHeight + 24
+                radiusValue: 16
                 strong: true
-                highlighted: urgency === 2
+                highlighted: urgency === 2 || toastHover.containsMouse
 
                 property real progress: 1.0
+                property real slideX: 38
+                transform: Translate { x: toast.slideX }
 
                 Component.onCompleted: {
+                    enterAnim.start();
                     if (timeoutMs > 0) {
                         expireAnim.duration = timeoutMs;
                         expireAnim.start();
                     }
+                }
+
+                ParallelAnimation {
+                    id: enterAnim
+                    NumberAnimation { target: toast; property: "slideX"; from: 38; to: 0; duration: 240; easing.type: Easing.OutCubic }
+                    NumberAnimation { target: toast; property: "opacity"; from: 0.0; to: 1.0; duration: 180; easing.type: Easing.OutCubic }
+                    NumberAnimation { target: toast; property: "scale"; from: 0.94; to: 1.0; duration: 240; easing.type: Easing.OutBack; easing.overshoot: 1.1 }
                 }
 
                 NumberAnimation {
@@ -69,22 +79,37 @@ PanelWindow {
                     onFinished: Notifications.removePopup(toast.uid)
                 }
 
+                // Left urgency/accent indicator stripe
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    anchors.leftMargin: 5
+                    anchors.topMargin: 10
+                    anchors.bottomMargin: 12
+                    width: 3
+                    radius: 1.5
+                    color: toast.urgency === 2 ? Theme.error : Theme.accent
+                }
+
                 ColumnLayout {
                     id: contentCol
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.top: parent.top
-                    anchors.margins: 12
-                    spacing: 6
+                    anchors.leftMargin: 16
+                    anchors.rightMargin: 13
+                    anchors.topMargin: 12
+                    spacing: 7
 
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: 8
+                        spacing: 10
 
                         ClippingWrapperRectangle {
-                            Layout.preferredWidth: 32
-                            Layout.preferredHeight: 32
-                            radius: 8
+                            Layout.preferredWidth: 36
+                            Layout.preferredHeight: 36
+                            radius: 10
                             visible: toast.image !== "" || toast.appIcon !== ""
 
                             Item {
@@ -95,8 +120,8 @@ PanelWindow {
                                     source: toast.image
                                     fillMode: Image.PreserveAspectCrop
                                     asynchronous: true
-                                    sourceSize.width: 64
-                                    sourceSize.height: 64
+                                    sourceSize.width: 72
+                                    sourceSize.height: 72
                                 }
 
                                 IconImage {
@@ -109,21 +134,31 @@ PanelWindow {
 
                         ColumnLayout {
                             Layout.fillWidth: true
-                            spacing: 1
+                            spacing: 2
                             RowLayout {
                                 Layout.fillWidth: true
-                                Text {
-                                    text: toast.appName
-                                    font.family: Theme.fontMono
-                                    font.pixelSize: 10
-                                    color: toast.urgency === 2 ? Theme.error : Theme.accent
+                                spacing: 6
+                                Rectangle {
+                                    width: appTag.implicitWidth + 10
+                                    height: 16
+                                    radius: 5
+                                    color: toast.urgency === 2 ? Qt.rgba(Theme.error.r, Theme.error.g, Theme.error.b, 0.16) : Theme.accentSoft
+                                    Text {
+                                        id: appTag
+                                        anchors.centerIn: parent
+                                        text: toast.appName
+                                        font.family: Theme.fontMono
+                                        font.pixelSize: 9
+                                        font.bold: true
+                                        color: toast.urgency === 2 ? Theme.error : Theme.accent
+                                    }
                                 }
                                 Item { Layout.fillWidth: true }
                                 Text {
-                                    text: toast.timeStr
+                                    text: toastHover.containsMouse && toast.timeoutMs > 0 ? "Paused" : toast.timeStr
                                     font.family: Theme.fontMono
                                     font.pixelSize: 10
-                                    color: Theme.muted
+                                    color: toastHover.containsMouse ? Theme.accent : Theme.muted
                                 }
                             }
                             Text {
@@ -141,12 +176,12 @@ PanelWindow {
                             Layout.preferredWidth: 22
                             Layout.preferredHeight: 22
                             radius: 11
-                            color: closeM.containsMouse ? Qt.rgba(1, 1, 1, 0.14) : Qt.rgba(1, 1, 1, 0.05)
+                            color: closeM.containsMouse ? Qt.rgba(Theme.error.r, Theme.error.g, Theme.error.b, 0.22) : Qt.rgba(1, 1, 1, 0.06)
                             Text {
                                 anchors.centerIn: parent
                                 text: "✕"
                                 font.pixelSize: 10
-                                color: Theme.muted
+                                color: closeM.containsMouse ? Theme.error : Theme.muted
                             }
                             MouseArea {
                                 id: closeM
@@ -219,15 +254,15 @@ PanelWindow {
                     visible: toast.timeoutMs > 0
                     anchors.bottom: parent.bottom
                     anchors.left: parent.left
-                    anchors.leftMargin: 10
-                    anchors.rightMargin: 10
-                    height: 2
-                    radius: 1
-                    width: Math.max(0, (parent.width - 20) * toast.progress)
+                    anchors.leftMargin: 12
+                    height: 2.5
+                    radius: 1.5
+                    width: Math.max(0, (parent.width - 24) * toast.progress)
                     color: toast.urgency === 2 ? Theme.error : Theme.accent
                 }
 
                 MouseArea {
+                    id: toastHover
                     anchors.fill: parent
                     z: -1
                     hoverEnabled: true
