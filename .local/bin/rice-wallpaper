@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+WALL_DIR="$HOME/wallpaper/zproger"
+[ ! -d "$WALL_DIR" ] && WALL_DIR="$HOME/wallpaper"
+
+if [ -n "${1:-}" ] && [ -f "${1:-}" ]; then
+    WALL="$1"
+else
+    WALL=$(find "$WALL_DIR" -maxdepth 1 -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) | shuf -n 1)
+fi
+
+[ -z "${WALL:-}" ] && exit 0
+
+mkdir -p "$HOME/.cache"
+echo "$WALL" > "$HOME/.cache/current_wallpaper"
+
+pgrep -x awww-daemon >/dev/null || (awww-daemon >/dev/null 2>&1 & sleep 0.2)
+awww img "$WALL" \
+    --transition-type grow \
+    --transition-pos center \
+    --transition-duration 0.9 \
+    --transition-fps 200 \
+    --filter Lanczos3 >/dev/null 2>&1 &
+
+PRESET=$(cat "$HOME/.cache/theme/active_preset" 2>/dev/null || echo "Matugen Dynamic")
+if [ "$PRESET" = "Matugen Dynamic" ]; then
+    "$HOME/.local/bin/rice-theme-generator" "$WALL" >/dev/null 2>&1 &
+fi

@@ -1,0 +1,90 @@
+@import "colors.rasi"
+
+configuration {
+    show-icons:                 false;
+    font:                       "Modula 15";
+}
+
+window {
+    transparency:               "real";
+    location:                   center;
+    anchor:                     center;
+    fullscreen:                 false;
+    width:                      700px;
+    x-offset:                   0px;
+    y-offset:                   0px;
+
+    padding:                    24px;
+    border:                     2px solid;
+    border-radius:              18px;
+    border-color:               @border-col;
+    background-color:           @bg;
+    cursor:                     "default";
+}
+
+mainbox {
+    spacing:                    18px;
+    padding:                    0px;
+    background-color:           transparent;
+    children:                   [ "inputbar", "listview" ];
+}
+
+inputbar {
+    spacing:                    10px;
+    padding:                    10px 14px;
+    border-radius:              10px;
+    background-color:           @bg-alt;
+    text-color:                 @fg;
+    children:                   [ "prompt" ];
+}
+
+prompt {
+    background-color:           transparent;
+    text-color:                 @accent;
+    font:                       "JetBrainsMono Nerd Font Bold 12";
+}
+
+listview {
+    columns:                    5;
+    lines:                      1;
+    cycle:                      true;
+    dynamic:                    true;
+    scrollbar:                  false;
+    layout:                     vertical;
+    reverse:                    false;
+    fixed-height:               true;
+    fixed-columns:              true;
+    
+    spacing:                    12px;
+    background-color:           transparent;
+    cursor:                     "default";
+}
+
+element {
+    orientation:                vertical;
+    spacing:                    8px;
+    padding:                    20px 10px;
+    border-radius:              12px;
+    background-color:           @bg-alt;
+    text-color:                 @fg;
+    cursor:                     pointer;
+}
+
+element normal.normal {
+    background-color:           @bg-alt;
+    text-color:                 @fg;
+}
+
+element selected.normal {
+    background-color:           @accent;
+    text-color:                 @bg;
+}
+
+element-text {
+    background-color:           transparent;
+    text-color:                 inherit;
+    cursor:                     inherit;
+    vertical-align:             0.5;
+    horizontal-align:           0.5;
+    font:                       "Modula Bold 15";
+}

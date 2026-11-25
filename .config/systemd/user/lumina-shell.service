@@ -1,0 +1,13 @@
+[Unit]
+Description=Lumina Wayland Desktop Shell (Quickshell)
+PartOf=graphical-session.target
+After=graphical-session.target
+Wants=graphical-session.target
+
+[Service]
+ExecStart=/usr/bin/qs -c lumina
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=graphical-session.target

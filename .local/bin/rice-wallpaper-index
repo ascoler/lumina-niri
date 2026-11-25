@@ -1,0 +1,133 @@
+#!/usr/bin/env python3
+"""Incremental wallpaper thumbnail & dominant color-bucket indexer for Lumina."""
+
+import colorsys
+import hashlib
+import json
+import os
+from pathlib import Path
+from PIL import Image, ImageOps
+
+WALL_ROOT = Path.home() / "wallpaper"
+CURATED_DIR = WALL_ROOT / "zproger"
+CACHE_DIR = Path.home() / ".cache" / "lumina"
+THUMB_DIR = Path.home() / ".cache" / "wallpaper_thumbs"
+INDEX_PATH = CACHE_DIR / "wallpapers.json"
+EXTS = {".jpg", ".jpeg", ".png", ".webp"}
+
+
+def classify_bucket(img: Image.Image) -> tuple[str, str]:
+    tiny = img.resize((24, 24), Image.Resampling.BILINEAR).convert("RGB")
+    pixels = list(tiny.get_flattened_data())
+    # Pick vibrant median-ish hue weighted by saturation
+    best_r, best_g, best_b = 128, 128, 128
+    sum_r = sum_g = sum_b = weight_sum = 0.0
+    for r, g, b in pixels:
+        h, s, v = colorsys.rgb_to_hsv(r / 255.0, g / 255.0, b / 255.0)
+        w = (s * 1.8 + 0.1) * (0.3 + v * 0.7)
+        sum_r += r * w
+        sum_g += g * w
+        sum_b += b * w
+        weight_sum += w
+    if weight_sum > 0:
+        best_r = int(sum_r / weight_sum)
+        best_g = int(sum_g / weight_sum)
+        best_b = int(sum_b / weight_sum)
+
+    h, s, v = colorsys.rgb_to_hsv(best_r / 255.0, best_g / 255.0, best_b / 255.0)
+    hex_col = f"#{best_r:02x}{best_g:02x}{best_b:02x}"
+    deg = h * 360.0
+
+    if s < 0.16 or v < 0.12:
+        return "mono", hex_col
+    if deg < 18 or deg >= 335:
+        return "red", hex_col
+    if deg < 42:
+        return "orange", hex_col
+    if deg < 70:
+        return "yellow", hex_col
+    if deg < 155:
+        return "green", hex_col
+    if deg < 195:
+        return "cyan", hex_col
+    if deg < 258:
+        return "blue", hex_col
+    return "purple", hex_col
+
+
+def collect_files() -> list[Path]:
+    files = []
+    if not WALL_ROOT.exists():
+        return files
+    for root, dirs, names in os.walk(WALL_ROOT):
+        dirs[:] = [d for d in sorted(dirs) if not d.startswith(".")]
+        for name in sorted(names):
+            p = Path(root) / name
+            if p.suffix.lower() in EXTS:
+                files.append(p)
+    return files
+
+
+def main() -> int:
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    THUMB_DIR.mkdir(parents=True, exist_ok=True)
+
+    existing = {}
+    if INDEX_PATH.exists():
+        try:
+            for item in json.loads(INDEX_PATH.read_text()):
+                existing[item["path"]] = item
+        except Exception:
+            existing = {}
+
+    items = []
+    for p in collect_files():
+        spath = str(p)
+        try:
+            mtime = int(p.stat().st_mtime)
+        except OSError:
+            continue
+
+        cached = existing.get(spath)
+        if cached and cached.get("mtime") == mtime and Path(cached.get("thumb", "")).exists():
+            items.append(cached)
+            continue
+
+        digest = hashlib.md5(spath.encode("utf-8")).hexdigest()[:16]
+        thumb_path = THUMB_DIR / f"{digest}.jpg"
+        bucket, hex_col = "mono", "#808080"
+
+        try:
+            with Image.open(p) as im:
+                rgb = im.convert("RGB")
+                bucket, hex_col = classify_bucket(rgb)
+                if not thumb_path.exists():
+                    thumb = ImageOps.fit(rgb, (320, 180), method=Image.Resampling.BILINEAR)
+                    thumb.save(thumb_path, "JPEG", quality=84)
+        except Exception:
+            continue
+
+        rel = p.relative_to(WALL_ROOT)
+        folder = "curated" if CURATED_DIR in p.parents else (rel.parts[0] if len(rel.parts) > 1 else "root")
+        items.append({
+            "path": spath,
+            "name": p.stem,
+            "thumb": str(thumb_path),
+            "bucket": bucket,
+            "hex": hex_col,
+            "folder": folder,
+            "curated": CURATED_DIR in p.parents,
+            "mtime": mtime,
+        })
+
+    # Curated wallpapers first, then alphabetical
+    items.sort(key=lambda x: (0 if x["curated"] else 1, x["name"].lower()))
+    tmp = INDEX_PATH.with_suffix(".tmp")
+    tmp.write_text(json.dumps(items))
+    tmp.replace(INDEX_PATH)
+    print(f"Indexed {len(items)} wallpapers")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

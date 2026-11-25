@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+HEX=$(hyprpicker -a -n 2>/dev/null | tr -d '[:space:]')
+[ -z "$HEX" ] && exit 0
+
+printf "%s" "$HEX" | wl-copy
+SWATCH="/tmp/lumina_swatch_${HEX#\#}.png"
+magick -size 48x48 "xc:$HEX" "$SWATCH" 2>/dev/null || SWATCH="color-picker"
+notify-send -a "Color Picker" -i "$SWATCH" "Color Copied" "$HEX copied to clipboard" 2>/dev/null || true

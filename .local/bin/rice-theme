@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PRESET="${1:-}"
+CACHE_DIR="$HOME/.cache/theme"
+mkdir -p "$CACHE_DIR"
+
+if [ -z "$PRESET" ]; then
+    if qs ipc -c lumina call shell toggleTheme >/dev/null 2>&1; then
+        exit 0
+    fi
+    PRESET=$(printf "Matugen Dynamic\nLucid Material 3\nCatppuccin Mocha\nTokyo Night\nNord\nGruvbox Dark" | rofi -dmenu -theme "$HOME/.config/rofi/theme-select.rasi" -p " 󰔎  Theme ")
+fi
+
+[ -z "$PRESET" ] && exit 0
+
+if [ "$PRESET" = "Matugen Dynamic" ]; then
+    echo "Matugen Dynamic" > "$CACHE_DIR/active_preset"
+    "$HOME/.local/bin/rice-theme-generator"
+    notify-send -a "Lumina" "Theme Updated" "Dynamic Material You from current wallpaper" 2>/dev/null || true
+    exit 0
+fi
+
+case "$PRESET" in
+    "Lucid Material 3")
+        JSON='{"name":"Lucid Material 3","bg":"#141a1b","surface":"#1d2627","surfaceHigh":"#273334","fg":"#dee4e4","muted":"#899393","accent":"#80d4dc","accentFg":"#00363a","secondary":"#72d8a5","tertiary":"#e2c478","error":"#ffb4ab","border":"#324041"}'
+        ;;
+    "Catppuccin Mocha")
+        JSON='{"name":"Catppuccin Mocha","bg":"#181825","surface":"#1e1e2e","surfaceHigh":"#313244","fg":"#cdd6f4","muted":"#7f849c","accent":"#89b4fa","accentFg":"#11111b","secondary":"#a6e3a1","tertiary":"#cba6f7","error":"#f38ba8","border":"#45475a"}'
+        ;;
+    "Tokyo Night")
+        JSON='{"name":"Tokyo Night","bg":"#16161e","surface":"#1a1b26","surfaceHigh":"#24283b","fg":"#c0caf5","muted":"#565f89","accent":"#7aa2f7","accentFg":"#15161e","secondary":"#9ece6a","tertiary":"#bb9af7","error":"#f7768e","border":"#3b4261"}'
+        ;;
+    "Nord")
+        JSON='{"name":"Nord","bg":"#242933","surface":"#2e3440","surfaceHigh":"#3b4252","fg":"#eceff4","muted":"#7b88a1","accent":"#88c0d0","accentFg":"#242933","secondary":"#a3be8c","tertiary":"#b48ead","error":"#bf616a","border":"#4c566a"}'
+        ;;
+    "Gruvbox Dark")
+        JSON='{"name":"Gruvbox Dark","bg":"#1d2021","surface":"#282828","surfaceHigh":"#3c3836","fg":"#ebdbb2","muted":"#928374","accent":"#fabd2f","accentFg":"#1d2021","secondary":"#b8bb26","tertiary":"#d3869b","error":"#fb4934","border":"#504945"}'
+        ;;
+    *)
+        exit 0
+        ;;
+esac
+
+echo "$PRESET" > "$CACHE_DIR/active_preset"
+"$HOME/.local/bin/rice-theme-generator" --json "$JSON"
+notify-send -a "Lumina" "Theme Updated" "Applied preset: $PRESET" 2>/dev/null || true

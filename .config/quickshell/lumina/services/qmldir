@@ -1,0 +1,7 @@
+singleton Theme 1.0 Theme.qml
+singleton Niri 1.0 Niri.qml
+singleton Audio 1.0 Audio.qml
+singleton Media 1.0 Media.qml
+singleton Notifications 1.0 Notifications.qml
+singleton SystemInfo 1.0 SystemInfo.qml
+singleton Cava 1.0 Cava.qml

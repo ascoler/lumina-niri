@@ -1,0 +1,130 @@
+@import "colors.rasi"
+
+configuration {
+    show-icons:                 true;
+    font:                       "Modula 12";
+}
+
+window {
+    transparency:               "real";
+    location:                   center;
+    anchor:                     center;
+    fullscreen:                 false;
+    width:                      900px;
+    height:                     560px;
+    x-offset:                   0px;
+    y-offset:                   0px;
+
+    enabled:                    true;
+    margin:                     0px;
+    padding:                    20px;
+    border:                     2px solid;
+    border-radius:              16px;
+    border-color:               @border-col;
+    background-color:           @bg;
+    cursor:                     "default";
+}
+
+mainbox {
+    enabled:                    true;
+    spacing:                    15px;
+    margin:                     0px;
+    padding:                    0px;
+    background-color:           transparent;
+    children:                   [ "inputbar", "listview" ];
+}
+
+inputbar {
+    enabled:                    true;
+    spacing:                    10px;
+    margin:                     0px;
+    padding:                    10px 14px;
+    border-radius:              10px;
+    background-color:           @bg-alt;
+    text-color:                 @fg;
+    children:                   [ "prompt", "entry" ];
+}
+
+prompt {
+    enabled:                    true;
+    background-color:           transparent;
+    text-color:                 @accent;
+    font:                       "Modula Bold 13";
+}
+
+entry {
+    enabled:                    true;
+    background-color:           transparent;
+    text-color:                 @fg;
+    cursor:                     text;
+    placeholder:                "Type to filter wallpapers...";
+    placeholder-color:          @fg-alt;
+}
+
+listview {
+    enabled:                    true;
+    columns:                    4;
+    lines:                      2;
+    cycle:                      true;
+    dynamic:                    true;
+    scrollbar:                  true;
+    layout:                     vertical;
+    reverse:                    false;
+    fixed-height:               true;
+    fixed-columns:              true;
+    
+    spacing:                    12px;
+    margin:                     5px 0px 0px 0px;
+    padding:                    0px;
+    background-color:           transparent;
+    text-color:                 @fg;
+    cursor:                     "default";
+}
+
+scrollbar {
+    handle-width:               4px;
+    handle-color:               @accent;
+    border-radius:              4px;
+    background-color:           @bg-alt;
+}
+
+element {
+    enabled:                    true;
+    orientation:                vertical;
+    spacing:                    8px;
+    margin:                     0px;
+    padding:                    10px;
+    border-radius:              12px;
+    background-color:           @bg-alt;
+    text-color:                 @fg;
+    cursor:                     pointer;
+}
+
+element normal.normal {
+    background-color:           @bg-alt;
+    text-color:                 @fg;
+}
+
+element selected.normal {
+    background-color:           @bg-alt;
+    border:                     2px solid;
+    border-color:               @accent;
+    text-color:                 @accent;
+}
+
+element-icon {
+    background-color:           transparent;
+    text-color:                 inherit;
+    size:                       140px;
+    cursor:                     inherit;
+    horizontal-align:           0.5;
+}
+
+element-text {
+    background-color:           transparent;
+    text-color:                 inherit;
+    highlight:                  inherit;
+    cursor:                     inherit;
+    vertical-align:             0.5;
+    horizontal-align:           0.5;
+}

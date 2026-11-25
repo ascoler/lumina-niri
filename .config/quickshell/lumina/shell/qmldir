@@ -1,0 +1,11 @@
+Bar 1.0 Bar.qml
+ControlCenter 1.0 ControlCenter.qml
+WallpaperCarousel 1.0 WallpaperCarousel.qml
+Launcher 1.0 Launcher.qml
+Clipboard 1.0 Clipboard.qml
+PowerMenu 1.0 PowerMenu.qml
+ThemeSwitcher 1.0 ThemeSwitcher.qml
+BackdropWidgets 1.0 BackdropWidgets.qml
+Osd 1.0 Osd.qml
+NotificationPopups 1.0 NotificationPopups.qml
+PolkitDialog 1.0 PolkitDialog.qml

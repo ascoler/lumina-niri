@@ -1,0 +1,7 @@
+.DS_Store
+*.bak
+*.tmp
+*.log
+.cache/
+.config/hyprlock/wallpapers/
+.config/hyprlock/current_wallpaper

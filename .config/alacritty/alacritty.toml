@@ -1,0 +1,16 @@
+[general]
+import = ["/home/wakeup/.config/alacritty/colors.toml"]
+
+[window]
+padding = { x = 14, y = 14 } # Отступы от краев (чтобы текст не лип к границам)
+opacity = 0.80              # Прозрачность окна (0.0 — невидимое, 1.0 — плотное)
+blur = true                 # Размытие фона
+decorations = "None"        # Отключает системные рамки окна (для минимализма)
+
+# Настройки шрифта
+[font]
+size = 13.0
+normal = { family = "JetBrainsMono Nerd Font", style = "Regular" }
+bold = { family = "JetBrainsMono Nerd Font", style = "Bold" }
+italic = { family = "JetBrainsMono Nerd Font", style = "Italic" }
+bold_italic = { family = "JetBrainsMono Nerd Font", style = "Bold Italic" }

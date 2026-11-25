@@ -1,0 +1,304 @@
+#!/usr/bin/env python3
+"""Generate unified Material You palette JSON and sync Niri + apps."""
+
+import json
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+CACHE_DIR = Path.home() / ".cache" / "theme"
+PALETTE_JSON = CACHE_DIR / "palette.json"
+WALL_CACHE = Path.home() / ".cache" / "current_wallpaper"
+THEME_MODE_FILE = CACHE_DIR / "active_preset"
+
+
+def hex_to_rgb(h: str) -> tuple[int, int, int]:
+    h = h.lstrip("#")
+    if len(h) == 3:
+        h = "".join(c * 2 for c in h)
+    return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+
+
+def mix_hex(h1: str, h2: str, t: float) -> str:
+    r1, g1, b1 = hex_to_rgb(h1)
+    r2, g2, b2 = hex_to_rgb(h2)
+    r = round(r1 + (r2 - r1) * t)
+    g = round(g1 + (g2 - g1) * t)
+    b = round(b1 + (b2 - b1) * t)
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
+def apply_palette(palette: dict, wallpaper_path: str = "") -> None:
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    if wallpaper_path:
+        palette["wallpaper"] = wallpaper_path
+
+    # Atomic write so Quickshell FileView never sees partial JSON
+    tmp_path = PALETTE_JSON.with_suffix(".tmp")
+    tmp_path.write_text(json.dumps(palette, indent=2) + "\n")
+    tmp_path.replace(PALETTE_JSON)
+
+    bg = palette["bg"]
+    bg_alt = palette["surface"]
+    bg_high = palette["surfaceHigh"]
+    fg = palette["fg"]
+    muted = palette["muted"]
+    accent = palette["accent"]
+    accent_fg = palette["accentFg"]
+    secondary = palette["secondary"]
+    tertiary = palette["tertiary"]
+    error = palette["error"]
+
+    bg_rgb = hex_to_rgb(bg)
+    surf_rgb = hex_to_rgb(bg_alt)
+    acc_rgb = hex_to_rgb(accent)
+    sec_rgb = hex_to_rgb(secondary)
+    ter_rgb = hex_to_rgb(tertiary)
+    mut_rgb = hex_to_rgb(muted)
+
+    # 1. Alacritty
+    alacritty_colors = Path.home() / ".config" / "alacritty" / "colors.toml"
+    if alacritty_colors.parent.exists():
+        alacritty_colors.write_text(
+            f"""[colors.primary]
+background = '{bg}'
+foreground = '{fg}'
+
+[colors.cursor]
+text = '{bg}'
+cursor = '{accent}'
+
+[colors.normal]
+black   = '{bg}'
+red     = '{error}'
+green   = '{secondary}'
+yellow  = '{tertiary}'
+blue    = '{accent}'
+magenta = '{tertiary}'
+cyan    = '{accent}'
+white   = '{fg}'
+
+[colors.bright]
+black   = '{muted}'
+red     = '{error}'
+green   = '{secondary}'
+yellow  = '{tertiary}'
+blue    = '{accent}'
+magenta = '{tertiary}'
+cyan    = '{accent}'
+white   = '#ffffff'
+"""
+        )
+
+    # 2. Kitty
+    kitty_colors = Path.home() / ".config" / "kitty" / "colors.conf"
+    if kitty_colors.parent.exists():
+        kitty_colors.write_text(
+            f"""foreground            {fg}
+background            {bg}
+selection_foreground  {accent_fg}
+selection_background  {accent}
+cursor                {accent}
+cursor_text_color     {bg}
+
+color0   {bg_alt}
+color8   {muted}
+color1   {error}
+color9   {error}
+color2   {secondary}
+color10  {secondary}
+color3   {tertiary}
+color11  {tertiary}
+color4   {accent}
+color12  {accent}
+color5   {tertiary}
+color13  {tertiary}
+color6   {accent}
+color14  {accent}
+color7   {fg}
+color15  #ffffff
+"""
+        )
+
+    # 3. Rofi fallback
+    rofi_colors = Path.home() / ".config" / "rofi" / "colors.rasi"
+    if rofi_colors.parent.exists():
+        rofi_colors.write_text(
+            f"""* {{
+    bg:          {bg}f0;
+    bg-alt:      {bg_alt}ff;
+    fg:          {fg}ff;
+    fg-alt:      {muted}ff;
+    accent:      {accent}ff;
+    urgent:      {error}ff;
+    active:      {secondary}ff;
+    border-col:  {accent}aa;
+}}
+"""
+        )
+
+    # 4. Hyprlock
+    if wallpaper_path and Path(wallpaper_path).is_file():
+        hypr_wall = Path.home() / ".config" / "hyprlock" / "current_wallpaper"
+        try:
+            if hypr_wall.is_symlink() or hypr_wall.exists():
+                hypr_wall.unlink()
+            hypr_wall.symlink_to(wallpaper_path)
+        except OSError:
+            pass
+
+    hypr_colors = Path.home() / ".config" / "hypr" / "colors.conf"
+    if hypr_colors.parent.exists():
+        wall = wallpaper_path or palette.get("wallpaper", "")
+        hypr_colors.write_text(
+            f"""$wallpaper = {wall}
+$accent = rgba({acc_rgb[0]}, {acc_rgb[1]}, {acc_rgb[2]}, 0.85)
+$accent_solid = rgb({accent.lstrip('#')})
+$bg = rgba({bg_rgb[0]}, {bg_rgb[1]}, {bg_rgb[2]}, 0.72)
+$fg = rgb({fg.lstrip('#')})
+$muted = rgb({muted.lstrip('#')})
+$check = rgb({tertiary.lstrip('#')})
+$fail = rgb({error.lstrip('#')})
+"""
+        )
+
+    hyprlock_colors = Path.home() / ".config" / "hyprlock" / "colors.conf"
+    if hyprlock_colors.parent.exists():
+        hyprlock_colors.write_text(
+            f"""$primary_1 = {bg.lstrip('#')}
+$primary_3 = {bg_alt.lstrip('#')}
+$primary_4 = {accent.lstrip('#')}
+$text_1 = {fg.lstrip('#')}
+$primary_1_rgba = rgba({bg_rgb[0]},{bg_rgb[1]},{bg_rgb[2]},0.9)
+$primary_3_rgba = rgba({surf_rgb[0]},{surf_rgb[1]},{surf_rgb[2]},0.9)
+$primary_4_rgba = rgba({acc_rgb[0]},{acc_rgb[1]},{acc_rgb[2]},0.9)
+$text_1_rgba = rgba(255,255,255,0.95)
+$p1_accent_4_rgba = rgba({acc_rgb[0]},{acc_rgb[1]},{acc_rgb[2]},0.9)
+$p2_accent_4_rgba = rgba({ter_rgb[0]},{ter_rgb[1]},{ter_rgb[2]},0.9)
+$p3_accent_6_rgba = rgba({sec_rgb[0]},{sec_rgb[1]},{sec_rgb[2]},0.9)
+$p3_accent_7_rgba = rgba({acc_rgb[0]},{acc_rgb[1]},{acc_rgb[2]},0.9)
+$p4_accent_7_rgba = rgba({mut_rgb[0]},{mut_rgb[1]},{mut_rgb[2]},0.9)
+"""
+        )
+
+    # 5. Waybar fallback
+    waybar_colors = Path.home() / ".config" / "waybar" / "colors.css"
+    if waybar_colors.parent.exists():
+        waybar_colors.write_text(
+            f"""@define-color bg {bg};
+@define-color fg {fg};
+@define-color accent {accent};
+@define-color accent_fg {accent_fg};
+@define-color workspace-button-bg {bg_alt};
+@define-color workspace-button-fg {muted};
+@define-color workspace-button-active-bg {accent};
+@define-color workspace-button-active-fg {accent_fg};
+@define-color blue-terracotta {bg_alt};
+@define-color gray-blue {bg_high};
+@define-color nice-dark {bg};
+"""
+        )
+
+    # 6. Niri border colors
+    niri_cfg = Path.home() / ".config" / "niri" / "config.kdl"
+    if niri_cfg.exists():
+        content = niri_cfg.read_text()
+        content = re.sub(
+            r'(border\s*\{[^}]*?active-color\s*)"#[0-9a-fA-F]+"',
+            rf'\1"{accent}"',
+            content,
+        )
+        content = re.sub(
+            r'(border\s*\{[^}]*?inactive-color\s*)"#[0-9a-fA-F]+"',
+            rf'\1"{bg_alt}"',
+            content,
+        )
+        content = re.sub(
+            r'(border\s*\{[^}]*?urgent-color\s*)"#[0-9a-fA-F]+"',
+            rf'\1"{error}"',
+            content,
+        )
+        content = re.sub(
+            r'(focus-ring\s*\{[^}]*?active-color\s*)"#[0-9a-fA-F]+"',
+            rf'\1"{accent}"',
+            content,
+        )
+        niri_cfg.write_text(content)
+        subprocess.run(
+            ["niri", "msg", "action", "load-config-file"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
+
+def from_matugen(wallpaper_path: str) -> dict | None:
+    try:
+        res = subprocess.check_output(
+            ["matugen", "image", wallpaper_path, "--source-color-index", "0", "-j", "hex"],
+            stderr=subprocess.DEVNULL,
+        )
+        data = json.loads(res)
+    except Exception:
+        return None
+
+    colors = data.get("colors", {})
+    pick = lambda k, default: colors.get(k, {}).get("default", {}).get("color", default)
+
+    bg = pick("surface", "#121318")
+    surface = pick("surface_container", "#1e1f26")
+    surface_high = pick("surface_container_high", "#282a34")
+    fg = pick("on_surface", "#e3e1e9")
+    muted = pick("outline", "#8e909e")
+    accent = pick("primary", "#b9c3ff")
+    accent_fg = pick("on_primary", "#1d2759")
+    secondary = pick("secondary", "#72d8a5")
+    tertiary = pick("tertiary", "#e5bad8")
+    error = pick("error", "#ffb4ab")
+
+    return {
+        "name": "Matugen Dynamic",
+        "bg": bg,
+        "surface": surface,
+        "surfaceHigh": surface_high,
+        "fg": fg,
+        "muted": muted,
+        "accent": accent,
+        "accentFg": accent_fg,
+        "secondary": secondary,
+        "tertiary": tertiary,
+        "error": error,
+        "border": mix_hex(bg, "#ffffff", 0.14),
+        "wallpaper": wallpaper_path,
+    }
+
+
+def main() -> int:
+    if len(sys.argv) >= 3 and sys.argv[1] == "--json":
+        palette = json.loads(sys.argv[2])
+        apply_palette(palette)
+        return 0
+
+    wall = sys.argv[1] if len(sys.argv) > 1 else ""
+    if not wall and WALL_CACHE.exists():
+        wall = WALL_CACHE.read_text().strip()
+
+    if not wall or not Path(wall).is_file():
+        print(f"Wallpaper not found: {wall}", file=sys.stderr)
+        return 1
+
+    palette = from_matugen(wall)
+    if not palette:
+        print("Matugen failed", file=sys.stderr)
+        return 1
+
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    THEME_MODE_FILE.write_text("Matugen Dynamic")
+    apply_palette(palette, wall)
+    print(f"Applied Matugen palette ({palette['accent']}) from {Path(wall).name}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

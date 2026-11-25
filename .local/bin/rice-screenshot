@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+MODE="${1:-region}"
+OUT_DIR="$HOME/Pictures/Screenshots"
+mkdir -p "$OUT_DIR"
+FILE="$OUT_DIR/Screenshot_$(date +%Y-%m-%d_%H-%M-%S).png"
+
+case "$MODE" in
+    region)
+        GEOM=$(slurp -b "#12131888" -c "#b9c3ffff" -w 2 2>/dev/null) || exit 0
+        grim -g "$GEOM" "$FILE"
+        ;;
+    screen)
+        grim "$FILE"
+        ;;
+    annotate)
+        GEOM=$(slurp -b "#12131888" -c "#b9c3ffff" -w 2 2>/dev/null) || exit 0
+        grim -g "$GEOM" - | satty --filename - --output-filename "$FILE" --early-exit --copy-command wl-copy
+        exit 0
+        ;;
+    *)
+        exit 1
+        ;;
+esac
+
+if [ -f "$FILE" ]; then
+    wl-copy < "$FILE"
+    ACTION=$(notify-send -a "Screenshot" -i "$FILE" --action="edit=Annotate (Satty)" "Screenshot Saved" "Copied to clipboard & saved to $(basename "$FILE")" 2>/dev/null || true)
+    if [ "$ACTION" = "edit" ]; then
+        satty --filename "$FILE" --output-filename "$FILE" --early-exit --copy-command wl-copy &
+    fi
+fi

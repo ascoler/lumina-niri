@@ -1,0 +1,149 @@
+@import "colors.rasi"
+
+configuration {
+    modi:                       "drun,run";
+    show-icons:                 true;
+    display-drun:               "   Apps ";
+    display-run:                "   Run ";
+    drun-display-format:        "{name}";
+    font:                       "Modula 13";
+    icon-theme:                 "Papirus-Dark";
+}
+
+window {
+    transparency:               "real";
+    location:                   center;
+    anchor:                     center;
+    fullscreen:                 false;
+    width:                      720px;
+    x-offset:                   0px;
+    y-offset:                   0px;
+
+    enabled:                    true;
+    margin:                     0px;
+    padding:                    20px;
+    border:                     2px solid;
+    border-radius:              14px;
+    border-color:               @border-col;
+    background-color:           @bg;
+    cursor:                     "default";
+}
+
+mainbox {
+    enabled:                    true;
+    spacing:                    15px;
+    margin:                     0px;
+    padding:                    0px;
+    border:                     0px solid;
+    background-color:           transparent;
+    children:                   [ "inputbar", "listview", "mode-switcher" ];
+}
+
+inputbar {
+    enabled:                    true;
+    spacing:                    10px;
+    margin:                     0px;
+    padding:                    10px 14px;
+    border-radius:              10px;
+    background-color:           @bg-alt;
+    text-color:                 @fg;
+    children:                   [ "prompt", "entry" ];
+}
+
+prompt {
+    enabled:                    true;
+    background-color:           transparent;
+    text-color:                 @accent;
+    font:                       "Modula Bold 13";
+}
+
+entry {
+    enabled:                    true;
+    background-color:           transparent;
+    text-color:                 @fg;
+    cursor:                     text;
+    placeholder:                "Search applications...";
+    placeholder-color:          @fg-alt;
+}
+
+listview {
+    enabled:                    true;
+    columns:                    2;
+    lines:                      7;
+    cycle:                      true;
+    dynamic:                    true;
+    scrollbar:                  false;
+    layout:                     vertical;
+    reverse:                    false;
+    fixed-height:               true;
+    fixed-columns:              true;
+    
+    spacing:                    6px;
+    margin:                     0px;
+    padding:                    0px;
+    background-color:           transparent;
+    text-color:                 @fg;
+    cursor:                     "default";
+}
+
+element {
+    enabled:                    true;
+    spacing:                    12px;
+    margin:                     0px;
+    padding:                    8px 12px;
+    border-radius:              8px;
+    background-color:           transparent;
+    text-color:                 @fg;
+    cursor:                     pointer;
+}
+
+element normal.normal {
+    background-color:           transparent;
+    text-color:                 @fg;
+}
+
+element selected.normal {
+    background-color:           @bg-alt;
+    border:                     1px solid;
+    border-color:               @accent;
+    text-color:                 @accent;
+}
+
+element-icon {
+    background-color:           transparent;
+    text-color:                 inherit;
+    size:                       28px;
+    cursor:                     inherit;
+}
+
+element-text {
+    background-color:           transparent;
+    text-color:                 inherit;
+    highlight:                  inherit;
+    cursor:                     inherit;
+    vertical-align:             0.5;
+    horizontal-align:           0.0;
+}
+
+mode-switcher{
+    enabled:                    true;
+    spacing:                    10px;
+    margin:                     0px;
+    padding:                    0px;
+    background-color:           transparent;
+    text-color:                 @fg;
+}
+
+button {
+    padding:                    8px 12px;
+    border-radius:              8px;
+    background-color:           @bg-alt;
+    text-color:                 @fg-alt;
+    cursor:                     pointer;
+}
+
+button selected {
+    background-color:           @accent;
+    text-color:                 @bg;
+    font:                       "Modula Bold 13";
+}
